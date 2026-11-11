@@ -1,21 +1,30 @@
+import { AuthProvider } from '@/contexts/AuthContext';
+import { colors } from '@/theme/tokens';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-
-import { AuthProvider } from '@/contexts/auth-context';
-import { colors } from '@/theme/tokens';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <StatusBar style="dark" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: colors.background },
-          animation: 'slide_from_right',
-        }}
-      />
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <StatusBar style="light" />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: {
+              backgroundColor: colors.background,
+            },
+            animation: 'fade',
+          }}
+        >
+          <Stack.Screen name="index" />
+          <Stack.Screen name="onboarding" />
+          <Stack.Screen name="login" />
+          <Stack.Screen name="register" />
+          <Stack.Screen name="home" />
+        </Stack>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }
-

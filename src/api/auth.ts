@@ -1,15 +1,40 @@
 import { apiRequest } from './client';
-import type { AuthResult, User } from './types';
+import { AuthResult, LoginRequest, RegisterRequest, UserView } from './types';
 
-export const login = (email: string, password: string) =>
-  apiRequest<AuthResult>('/auth/login', { method: 'POST', body: { email, password } });
-
-export const register = (displayName: string, email: string, password: string) =>
-  apiRequest<AuthResult>('/auth/register', {
+/**
+ * Cadastra um novo usuário no backend e emite o token JWT.
+ */
+export async function registerUser(data: RegisterRequest): Promise<AuthResult> {
+  return apiRequest<AuthResult>('/auth/register', {
     method: 'POST',
-    body: { displayName, email, password },
+    body: {
+      displayName: data.displayName.trim(),
+      email: data.email.trim().toLowerCase(),
+      password: data.password,
+    },
   });
+}
 
-export const getCurrentUser = (token: string) =>
-  apiRequest<User>('/auth/me', { token });
+/**
+ * Realiza o login com e-mail e senha e retorna o token JWT e dados do usuário.
+ */
+export async function loginUser(data: LoginRequest): Promise<AuthResult> {
+  return apiRequest<AuthResult>('/auth/login', {
+    method: 'POST',
+    body: {
+      email: data.email.trim().toLowerCase(),
+      password: data.password,
+    },
+  });
+}
+
+/**
+ * Consulta o perfil do usuário logado usando o JWT armazenado.
+ */
+export async function getMe(token: string): Promise<UserView> {
+  return apiRequest<UserView>('/auth/me', {
+    method: 'GET',
+    token,
+  });
+}
 

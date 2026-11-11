@@ -2,48 +2,54 @@
 
 Aplicativo Android do Rattivo para o fluxo demonstrativo do CODITEC 2026.
 
+O aplicativo evolui por instruções versionadas em `src/tasks`, implementadas uma
+por vez.
+
 ## Stack
 
 - Expo SDK 58
 - React Native 0.88
 - Expo Router
-- TypeScript
-- Expo SecureStore para o access token em Android/iOS
+- TypeScript estrito
+- Expo SecureStore
 
-## Configuração
+## Preparar o ambiente
 
-Copie o exemplo:
-
-~~~powershell
-Copy-Item .env.example .env
-~~~
-
-Edite EXPO_PUBLIC_API_URL com o endereço do computador que executa o backend:
-
-~~~dotenv
-EXPO_PUBLIC_API_URL=http://192.168.0.10:8080
-~~~
-
-Não use localhost no celular físico e não acrescente /api/v1. O token é obtido no
-login e armazenado pelo app; nenhum segredo JWT ou Gemini pertence ao aplicativo.
-
-## Executar
-
-~~~powershell
+```powershell
 npm install
+Copy-Item .env.example .env
+```
+
+No arquivo `.env`, use o IP do computador que executa o backend:
+
+```dotenv
+EXPO_PUBLIC_API_URL=http://192.168.1.19:8080
+```
+
+Em celular físico não use `localhost` e não acrescente `/api/v1`. Celular e
+computador devem estar na mesma rede.
+
+## Executar a base
+
+```powershell
 npm start
-~~~
+```
 
-Leia o QR Code com o Expo Go compatível com SDK 58. Celular e computador devem estar
-na mesma rede. Antes, confira http://IP_DO_BACKEND:8080/actuator/health.
+Leia o QR Code com o Expo Go compatível com SDK 58.
 
-## Verificação
+## Verificações
 
-~~~powershell
+```powershell
 npm run typecheck
 npm run lint
-~~~
+```
 
-O teste físico completo com backend, módulo Python, webcam e Gemini está planejado
-para 10/11/2026.
+## Desenvolvimento por tasks
+
+1. Abra a task correspondente em `src/tasks`.
+2. Confirme que as referências visuais e demais insumos da task estão disponíveis.
+3. Entregue a task inteira antes de iniciar a seguinte.
+
+- `task01.md`: onboarding e autenticação — concluída.
+- `task02.md`: Home autenticada e navegação principal — pendente.
 

@@ -1,79 +1,120 @@
-import type { ApiEnvelope } from './types';
+import { ApiResponse } from './types';
 
-const configuredUrl = process.env.EXPO_PUBLIC_API_URL?.trim();
-export const apiBaseUrl = configuredUrl?.replace(/\/+$/, '') ?? '';
+const REQUEST_TIMEOUT_MS = 10000;
 
 export class ApiClientError extends Error {
-  constructor(
-    public readonly status: number,
-    public readonly code: string,
-    message: string,
-  ) {
+  code: string;
+  status?: number;
+
+  constructor(message: string, code = 'CLIENT_ERROR', status?: number) {
     super(message);
     this.name = 'ApiClientError';
+    this.code = code;
+    this.status = status;
   }
 }
 
-type RequestOptions = {
-  method?: 'GET' | 'POST';
-  token?: string;
-  body?: unknown;
-};
-
-export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  if (!apiBaseUrl) {
+export function getBaseApiUrl(): string {
+  const envUrl = process.env.EXPO_PUBLIC_API_URL;
+  if (!envUrl || envUrl.trim() === '') {
     throw new ApiClientError(
-      0,
-      'CONFIGURATION',
-      'Configure EXPO_PUBLIC_API_URL no arquivo .env e reinicie o Expo.',
+      'A variável de ambiente EXPO_PUBLIC_API_URL não está configurada. Configure a origem do backend no arquivo .env.',
+      'CONFIG_MISSING'
     );
   }
+
+  // Remove barras finais duplicadas e anexa /api/v1
+  const sanitized = envUrl.trim().replace(/\/+$/, '');
+  return `${sanitized}/api/v1`;
+}
+
+export interface RequestOptions {
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+  body?: unknown;
+  token?: string | null;
+  headers?: Record<string, string>;
+  timeoutMs?: number;
+}
+
+export async function apiRequest<T>(
+  endpoint: string,
+  options: RequestOptions = {}
+): Promise<T> {
+  const baseUrl = getBaseApiUrl();
+  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = `${baseUrl}${normalizedEndpoint}`;
+
+  const headers: Record<string, string> = {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+    ...(options.headers || {}),
+  };
+
+  if (options.token) {
+    headers['Authorization'] = `Bearer ${options.token}`;
+  }
+
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15_000);
+  const timeoutMs = options.timeoutMs ?? REQUEST_TIMEOUT_MS;
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  let response: Response;
   try {
-    const response = await fetch(apiBaseUrl + '/api/v1' + path, {
-      method: options.method ?? 'GET',
-      headers: {
-        Accept: 'application/json',
-        ...(options.body === undefined ? {} : { 'Content-Type': 'application/json' }),
-        ...(options.token ? { Authorization: 'Bearer ' + options.token } : {}),
-      },
-      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+    response = await fetch(url, {
+      method: options.method || 'GET',
+      headers,
+      body: options.body ? JSON.stringify(options.body) : undefined,
       signal: controller.signal,
     });
-    let envelope: ApiEnvelope<T>;
-    try {
-      envelope = (await response.json()) as ApiEnvelope<T>;
-    } catch {
-      throw new ApiClientError(
-        response.status,
-        'INVALID_RESPONSE',
-        'O backend retornou uma resposta que o aplicativo não reconhece.',
-      );
-    }
-    if (!response.ok || envelope.error) {
-      throw new ApiClientError(
-        response.status,
-        envelope.error?.code ?? 'HTTP_ERROR',
-        envelope.error?.message ?? 'Não foi possível concluir a solicitação.',
-      );
-    }
-    if (envelope.data === null) {
-      throw new ApiClientError(response.status, 'EMPTY_RESPONSE', 'O backend não retornou os dados esperados.');
-    }
-    return envelope.data;
-  } catch (error) {
-    if (error instanceof ApiClientError) throw error;
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new ApiClientError(0, 'TIMEOUT', 'O backend demorou para responder.');
+  } catch (err: unknown) {
+    clearTimeout(timeoutId);
+    if (err instanceof Error) {
+      if (err.name === 'AbortError') {
+        throw new ApiClientError(
+          'O servidor demorou muito para responder. Tempo limite de conexão excedido.',
+          'TIMEOUT'
+        );
+      }
     }
     throw new ApiClientError(
-      0,
-      'NETWORK',
-      'Não foi possível alcançar o backend. Confira a URL, a rede e o health check.',
+      'Não foi possível conectar ao servidor. Verifique se o backend está ligado e se o endereço está correto no arquivo .env.',
+      'NETWORK_ERROR'
     );
   } finally {
-    clearTimeout(timeout);
+    clearTimeout(timeoutId);
   }
+
+  // Tratamento da resposta
+  let json: ApiResponse<T> | null = null;
+  try {
+    json = (await response.json()) as ApiResponse<T>;
+  } catch {
+    if (!response.ok) {
+      throw new ApiClientError(
+        `O servidor retornou um erro inesperado (${response.status} ${response.statusText}).`,
+        'SERVER_ERROR',
+        response.status
+      );
+    }
+    throw new ApiClientError('Resposta inválida do servidor.', 'INVALID_RESPONSE', response.status);
+  }
+
+  if (json.error) {
+    throw new ApiClientError(json.error.message, json.error.code, response.status);
+  }
+
+  if (!response.ok) {
+    throw new ApiClientError(
+      `Falha na requisição com código ${response.status}.`,
+      'HTTP_ERROR',
+      response.status
+    );
+  }
+
+  if (json.data === null || json.data === undefined) {
+    return {} as T;
+  }
+
+  return json.data;
 }
 
