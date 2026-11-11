@@ -96,7 +96,7 @@ export default function RegisterScreen() {
         email: email.trim(),
         password,
       });
-      router.replace('/home');
+      router.replace('/(tabs)');
     } catch (err: unknown) {
       if (err instanceof ApiClientError) {
         if (err.status === 409 || err.code === 'CONFLICT') {

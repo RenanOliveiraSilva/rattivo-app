@@ -63,7 +63,7 @@ export default function LoginScreen() {
         email: email.trim(),
         password,
       });
-      router.replace('/home');
+      router.replace('/(tabs)');
     } catch (err: unknown) {
       if (err instanceof ApiClientError) {
         if (err.status === 401 || err.code === 'UNAUTHORIZED') {

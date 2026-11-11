@@ -30,7 +30,7 @@ export default function IndexScreen() {
 
   // Se já possui sessão autenticada e validada
   if (token && user) {
-    return <Redirect href="/home" />;
+    return <Redirect href="/(tabs)" />;
   }
 
   // Primeiro acesso: direciona para o onboarding de 3 telas

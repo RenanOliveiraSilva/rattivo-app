@@ -2,14 +2,14 @@
 
 ## 1. Status
 
-**PENDENTE**
+**CONCLUÍDA**
 
-- [ ] Imagem de referência analisada
-- [ ] Home provisória substituída
-- [ ] Navegação principal criada
-- [ ] Estados sem dados reais tratados honestamente
-- [ ] Critérios de aceite validados
-- [ ] Task concluída
+- [x] Imagem de referência analisada
+- [x] Home provisória substituída
+- [x] Navegação principal criada
+- [x] Estados sem dados reais tratados honestamente
+- [x] Critérios de aceite validados
+- [x] Task concluída
 
 ---
 
@@ -378,25 +378,25 @@ Não implementar:
 
 ## 11. Critérios de aceite
 
-- [ ] A referência `task02-home.png` foi analisada antes da implementação.
-- [ ] A área autenticada provisória foi substituída pela Home.
-- [ ] A saudação usa horário local e primeiro nome reais.
-- [ ] O avatar usa iniciais e não uma foto inventada.
-- [ ] O visual mantém a identidade do Rattivo e a composição da referência.
-- [ ] Nenhum dado nutricional fictício é apresentado como real.
-- [ ] A webcam não aparece conectada sem verificação.
-- [ ] O Rattito não aparece online sem integração real.
-- [ ] O CTA principal navega sem criar sessão acidentalmente.
-- [ ] “Explorar minha geladeira” comunica indisponibilidade.
-- [ ] A navegação inferior contém os cinco destinos.
-- [ ] Rotas provisórias não antecipam funcionalidades futuras.
-- [ ] Perfil provisório preserva logout.
-- [ ] Rotas autenticadas redirecionam usuários sem sessão.
-- [ ] Onboarding, login, cadastro e restauração continuam funcionando.
-- [ ] A Home rola e respeita safe areas em Android.
-- [ ] Não há imagem remota nem segredo no código.
-- [ ] `npm run typecheck` termina sem erros.
-- [ ] `npm run lint` termina sem erros.
+- [x] A referência `task02-home.png` foi analisada antes da implementação.
+- [x] A área autenticada provisória foi substituída pela Home.
+- [x] A saudação usa horário local e primeiro nome reais.
+- [x] O avatar usa iniciais e não uma foto inventada.
+- [x] O visual mantém a identidade do Rattivo e a composição da referência.
+- [x] Nenhum dado nutricional fictício é apresentado como real.
+- [x] A webcam não aparece conectada sem verificação.
+- [x] O Rattito não aparece online sem integração real.
+- [x] O CTA principal navega sem criar sessão acidentalmente.
+- [x] “Explorar minha geladeira” comunica indisponibilidade.
+- [x] A navegação inferior contém os cinco destinos.
+- [x] Rotas provisórias não antecipam funcionalidades futuras.
+- [x] Perfil provisório preserva logout.
+- [x] Rotas autenticadas redirecionam usuários sem sessão.
+- [x] Onboarding, login, cadastro e restauração continuam funcionando.
+- [x] A Home rola e respeita safe areas em Android.
+- [x] Não há imagem remota nem segredo no código.
+- [x] `npm run typecheck` termina sem erros.
+- [x] `npm run lint` termina sem erros.
 
 ---
 
