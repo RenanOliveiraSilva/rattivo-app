@@ -22,6 +22,7 @@ export default function RootLayout() {
           >
             <Stack.Screen name="index" />
             <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="recipes/[id]" />
             <Stack.Screen name="fridge-capture" />
             <Stack.Screen name="fridge-analysis" />
             <Stack.Screen name="onboarding" />
