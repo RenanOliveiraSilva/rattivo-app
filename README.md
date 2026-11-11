@@ -51,5 +51,6 @@ npm run lint
 3. Entregue a task inteira antes de iniciar a seguinte.
 
 - `task01.md`: onboarding e autenticação — concluída.
-- `task02.md`: Home autenticada e navegação principal — pendente.
+- `task02.md`: Home autenticada e navegação principal — concluída.
+- `task03.md`: captura de fotos da geladeira — pendente.
 

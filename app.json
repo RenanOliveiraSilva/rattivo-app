@@ -12,6 +12,12 @@
     },
     "android": {
       "package": "com.renan.rattivo",
+      "permissions": [
+        "android.permission.CAMERA"
+      ],
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#FFF4E8",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -34,7 +40,20 @@
           "imageWidth": 76
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "O Rattivo utiliza a câmera para fotografar os ingredientes disponíveis na sua geladeira ou bancada.",
+          "recordAudioPermission": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O Rattivo acessa a galeria somente para você escolher fotos de ingredientes armazenadas no aparelho."
+        }
+      ]
     ],
     "experiments": {
       "reactCompiler": true

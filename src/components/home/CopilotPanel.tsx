@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors, radius, spacing, typography } from '@/theme/tokens';
 
@@ -12,12 +12,7 @@ export const CopilotPanel: React.FC = () => {
   };
 
   const handleExploreFridge = () => {
-    // Feedback amigável e acessível de recurso em breve
-    Alert.alert(
-      'Explorar Minha Geladeira',
-      'O reconhecimento visual de ingredientes pela câmera do celular será implementado na etapa de visão computacional.',
-      [{ text: 'Entendi' }]
-    );
+    router.push('/fridge-capture');
   };
 
   return (
@@ -80,7 +75,7 @@ export const CopilotPanel: React.FC = () => {
             pressed && styles.actionButtonPressed,
           ]}
           accessibilityRole="button"
-          accessibilityLabel="Explorar minha geladeira: tirar uma foto e descobrir receitas (em breve)"
+          accessibilityLabel="Explorar minha geladeira: fotografar ou selecionar fotos de ingredientes"
         >
           <View style={styles.actionIconSecondaryWrapper}>
             <Image
@@ -90,12 +85,7 @@ export const CopilotPanel: React.FC = () => {
             />
           </View>
           <View style={styles.actionTextColumn}>
-            <View style={styles.titleRow}>
-              <Text style={styles.actionTitleSecondary}>Explorar minha geladeira</Text>
-              <View style={styles.soonPill}>
-                <Text style={styles.soonPillText}>Em breve</Text>
-              </View>
-            </View>
+            <Text style={styles.actionTitleSecondary}>Explorar minha geladeira</Text>
             <Text style={styles.actionSubtitleSecondary}>
               Tire uma foto e descubra receitas
             </Text>
