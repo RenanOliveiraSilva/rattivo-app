@@ -53,7 +53,7 @@ export const FridgeHeader: React.FC<FridgeHeaderProps> = ({
       <View style={styles.titleColumn}>
         <Text style={styles.title}>O que tem na sua geladeira?</Text>
         <Text style={styles.subtitle}>
-          Câmera do smartphone · modo demonstração
+          Câmera do smartphone · análise visual com IA
         </Text>
       </View>
     </View>

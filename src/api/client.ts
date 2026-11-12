@@ -1,3 +1,4 @@
+import { fetch as expoFetch } from 'expo/fetch';
 import { ApiResponse } from './types';
 
 const REQUEST_TIMEOUT_MS = 10000;
@@ -30,7 +31,7 @@ export function getBaseApiUrl(): string {
 
 export interface RequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
-  body?: unknown;
+  body?: unknown | FormData;
   token?: string | null;
   headers?: Record<string, string>;
   timeoutMs?: number;
@@ -44,26 +45,42 @@ export async function apiRequest<T>(
   const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   const url = `${baseUrl}${normalizedEndpoint}`;
 
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
+
   const headers: Record<string, string> = {
     'Accept': 'application/json',
-    'Content-Type': 'application/json',
     ...(options.headers || {}),
   };
 
+  // Para FormData, não definir Content-Type manualmente para que o boundary seja adicionado automaticamente
+  if (!isFormData && options.body !== undefined) {
+    headers['Content-Type'] = 'application/json';
+  }
+
   if (options.token) {
     headers['Authorization'] = `Bearer ${options.token}`;
+  }
+
+  let requestBody: any = undefined;
+  if (isFormData) {
+    requestBody = options.body;
+  } else if (options.body !== undefined) {
+    requestBody = JSON.stringify(options.body);
   }
 
   const controller = new AbortController();
   const timeoutMs = options.timeoutMs ?? REQUEST_TIMEOUT_MS;
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
+  // Usa expoFetch para FormData (suporte a File no Android) e fetch nativo para JSON
+  const fetchFn = isFormData ? (expoFetch as unknown as typeof fetch) : fetch;
+
   let response: Response;
   try {
-    response = await fetch(url, {
+    response = await fetchFn(url, {
       method: options.method || 'GET',
       headers,
-      body: options.body ? JSON.stringify(options.body) : undefined,
+      body: requestBody,
       signal: controller.signal,
     });
   } catch (err: unknown) {
@@ -72,12 +89,13 @@ export async function apiRequest<T>(
       if (err.name === 'AbortError') {
         throw new ApiClientError(
           'O servidor demorou muito para responder. Tempo limite de conexão excedido.',
-          'TIMEOUT'
+          'TIMEOUT',
+          504
         );
       }
     }
     throw new ApiClientError(
-      'Não foi possível conectar ao servidor. Verifique se o backend está ligado e se o endereço está correto no arquivo .env.',
+      'Não foi possível conectar ao servidor. Verifique se o backend está ligado e acessível na rede local.',
       'NETWORK_ERROR'
     );
   } finally {
@@ -90,6 +108,13 @@ export async function apiRequest<T>(
     json = (await response.json()) as ApiResponse<T>;
   } catch {
     if (!response.ok) {
+      if (response.status === 413) {
+        throw new ApiClientError(
+          'O tamanho dos arquivos enviados excedeu o limite aceito pelo servidor.',
+          'PAYLOAD_TOO_LARGE',
+          413
+        );
+      }
       throw new ApiClientError(
         `O servidor retornou um erro inesperado (${response.status} ${response.statusText}).`,
         'SERVER_ERROR',
@@ -117,4 +142,3 @@ export async function apiRequest<T>(
 
   return json.data;
 }
-

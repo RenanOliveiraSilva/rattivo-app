@@ -5,4 +5,7 @@ export interface SelectedIngredientPhoto {
   height?: number;
   timestamp?: number;
   source: 'camera' | 'gallery';
+  mimeType?: string;
+  fileName?: string;
+  fileSize?: number;
 }

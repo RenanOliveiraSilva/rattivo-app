@@ -7,13 +7,11 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRouter } from 'expo-router';
-import * as Speech from 'expo-speech';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCookingSession } from '@/hooks/useCookingSession';
 import { colors, radius, spacing } from '@/theme/tokens';
@@ -21,9 +19,8 @@ import { ChefHeader } from '@/components/assistant/ChefHeader';
 import { CookingStepCard } from '@/components/assistant/CookingStepCard';
 import { ChatMessage, ChatMessages } from '@/components/assistant/ChatMessages';
 import { QuickSuggestions } from '@/components/assistant/QuickSuggestions';
-import { VoiceControls } from '@/components/assistant/VoiceControls';
 
-const chefAvatar = require('@/../assets/images/onboarding/chef-logo.png');
+const chefAvatar = require('@/../assets/images/brand-mark.png');
 
 const DEFAULT_SUGGESTIONS = [
   'Qual é a etapa atual?',
@@ -39,9 +36,6 @@ export default function AssistantScreen() {
   const { user } = useAuth();
 
   const [isFocused, setIsFocused] = useState(true);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [showInput, setShowInput] = useState(false);
-  const [inputText, setInputText] = useState('');
 
   const defaultWelcome: ChatMessage = {
     id: 'welcome',
@@ -58,14 +52,11 @@ export default function AssistantScreen() {
     const unsubFocus = navigation.addListener('focus', () => setIsFocused(true));
     const unsubBlur = navigation.addListener('blur', () => {
       setIsFocused(false);
-      Speech.stop();
-      setIsSpeaking(false);
     });
 
     return () => {
       unsubFocus();
       unsubBlur();
-      Speech.stop();
     };
   }, [navigation]);
 
@@ -142,57 +133,10 @@ export default function AssistantScreen() {
     };
 
     setChatMessages((prev) => [...prev, userMsg, assistantMsg]);
-    setInputText('');
-    setShowInput(false);
 
     setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true });
     }, 150);
-  };
-
-  // Simula interação por voz (P1)
-  const handleSimulateVoice = () => {
-    if (!session) return;
-    const questions = [
-      'Qual é a etapa atual?',
-      'O que devo observar?',
-      'A câmera detectou algo?',
-      'Posso confirmar a etapa?',
-    ];
-    const picked = questions[Math.floor(Math.random() * questions.length)];
-    handleSendMessage(picked);
-  };
-
-  // Leitura em voz alta via TTS (P1)
-  const handleToggleSpeech = async () => {
-    if (isSpeaking) {
-      await Speech.stop();
-      setIsSpeaking(false);
-      return;
-    }
-
-    if (!session) return;
-
-    let textToSpeak = '';
-    if (session.latestObservation?.guidance) {
-      textToSpeak = `Orientação da bancada: ${session.latestObservation.guidance}`;
-    } else if (session.currentStep) {
-      textToSpeak = `Etapa ${session.currentStep.number}: ${session.currentStep.instruction}`;
-    }
-
-    if (!textToSpeak) return;
-
-    try {
-      setIsSpeaking(true);
-      await Speech.speak(textToSpeak, {
-        language: 'pt-BR',
-        onDone: () => setIsSpeaking(false),
-        onError: () => setIsSpeaking(false),
-        onStopped: () => setIsSpeaking(false),
-      });
-    } catch {
-      setIsSpeaking(false);
-    }
   };
 
   return (
@@ -216,14 +160,14 @@ export default function AssistantScreen() {
           {/* Avatar Central do Chef Rattito */}
           <View style={styles.avatarSection}>
             <View style={styles.avatarCircle}>
-              <Image source={chefAvatar} style={styles.avatarImage} resizeMode="contain" />
+              <Image source={chefAvatar} style={styles.avatarImage} resizeMode="cover" />
             </View>
             <Text style={styles.avatarSubtext}>
               {session?.status === 'PAUSED'
                 ? 'Preparo pausado'
                 : session?.status === 'COMPLETED'
                 ? 'Receita finalizada'
-                : 'Toque para falar'}
+                : 'Assistente culinário'}
             </Text>
           </View>
 
@@ -317,29 +261,6 @@ export default function AssistantScreen() {
           )}
         </ScrollView>
 
-        {/* Input de texto para digitação manual (caso ativado) */}
-        {showInput && session && session.status !== 'COMPLETED' && session.status !== 'CANCELLED' ? (
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Digite sua dúvida sobre o preparo..."
-              placeholderTextColor={colors.textSecondary}
-              value={inputText}
-              onChangeText={setInputText}
-              onSubmitEditing={() => handleSendMessage(inputText)}
-              returnKeyType="send"
-              autoFocus
-            />
-            <TouchableOpacity
-              style={styles.sendButton}
-              onPress={() => handleSendMessage(inputText)}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.sendButtonText}>Enviar</Text>
-            </TouchableOpacity>
-          </View>
-        ) : null}
-
         {/* Pílulas de Sugestões Rápidas (P1) */}
         {session && (session.status === 'ACTIVE' || session.status === 'PAUSED') ? (
           <QuickSuggestions
@@ -348,15 +269,6 @@ export default function AssistantScreen() {
             disabled={isPerformingAction}
           />
         ) : null}
-
-        {/* Controles de Voz, Teclado e Leitura em Voz Alta (P1) */}
-        <VoiceControls
-          onToggleKeyboard={() => setShowInput((prev) => !prev)}
-          onSimulateVoiceQuery={handleSimulateVoice}
-          onToggleSpeech={handleToggleSpeech}
-          isSpeaking={isSpeaking}
-          disabled={!session || session.status === 'COMPLETED' || session.status === 'CANCELLED'}
-        />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -381,9 +293,9 @@ const styles = StyleSheet.create({
     marginVertical: spacing.sm,
   },
   avatarCircle: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
+    width: 92,
+    height: 92,
+    borderRadius: 46,
     backgroundColor: '#1E2619',
     borderWidth: 2,
     borderColor: colors.primary,
@@ -392,8 +304,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   avatarImage: {
-    width: 76,
-    height: 76,
+    width: '100%',
+    height: '100%',
   },
   avatarSubtext: {
     fontSize: 13,
@@ -509,37 +421,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: colors.primaryText,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: 8,
-    backgroundColor: colors.surfaceCard,
-    borderTopWidth: 1,
-    borderTopColor: colors.borderLight,
-    gap: 8,
-  },
-  textInput: {
-    flex: 1,
-    height: 42,
-    backgroundColor: colors.surface,
-    borderRadius: radius.card,
-    paddingHorizontal: 12,
-    color: colors.textPrimary,
-    fontSize: 14,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-  },
-  sendButton: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.card,
-    paddingHorizontal: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sendButtonText: {
-    color: colors.primaryText,
-    fontWeight: '700',
-    fontSize: 13,
   },
 });

@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { CameraView, useCameraPermissions } from 'expo-camera';
@@ -27,6 +27,7 @@ export default function FridgeCaptureScreen() {
   const [isFocused, setIsFocused] = useState(true);
   const [permission, requestPermission] = useCameraPermissions();
   const [isCapturing, setIsCapturing] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   useEffect(() => {
     const unsubscribeFocus = navigation.addListener('focus', () => setIsFocused(true));
@@ -74,8 +75,8 @@ export default function FridgeCaptureScreen() {
     try {
       setIsCapturing(true);
       const picture = await cameraRef.current.takePictureAsync({
-        quality: 0.8,
-        skipProcessing: true,
+        quality: 0.6,
+        skipProcessing: false,
       });
 
       if (picture?.uri) {
@@ -85,6 +86,8 @@ export default function FridgeCaptureScreen() {
           height: picture.height,
           timestamp: Date.now(),
           source: 'camera',
+          mimeType: 'image/jpeg',
+          fileName: `camera_${Date.now()}.jpg`,
         });
       }
     } catch {
@@ -117,15 +120,48 @@ export default function FridgeCaptureScreen() {
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
+        let rejectedFormat = false;
+        let rejectedSize = false;
+
         result.assets.slice(0, remainingSlots).forEach((asset) => {
+          const mime = (asset.mimeType || '').toLowerCase();
+          const uri = (asset.uri || '').toLowerCase();
+
+          // Rejeita formatos não suportados
+          if (mime.includes('gif') || uri.endsWith('.gif') || mime.includes('heic') || uri.endsWith('.heic')) {
+            rejectedFormat = true;
+            return;
+          }
+
+          // Rejeita se ultrapassar 5 MiB
+          if (asset.fileSize && asset.fileSize > 5 * 1024 * 1024) {
+            rejectedSize = true;
+            return;
+          }
+
           addPhoto({
             uri: asset.uri,
             width: asset.width,
             height: asset.height,
             timestamp: Date.now(),
             source: 'gallery',
+            mimeType: asset.mimeType || (uri.endsWith('.png') ? 'image/png' : uri.endsWith('.webp') ? 'image/webp' : 'image/jpeg'),
+            fileName: asset.fileName || `gallery_${Date.now()}.jpg`,
+            fileSize: asset.fileSize,
           });
         });
+
+        if (rejectedFormat) {
+          Alert.alert(
+            'Formato não suportado',
+            'Uma ou mais fotos selecionadas não são suportadas. Use apenas JPEG, PNG ou WebP.'
+          );
+        } else if (rejectedSize) {
+          Alert.alert(
+            'Arquivo muito grande',
+            'Uma ou mais fotos selecionadas ultrapassam o limite de 5 MiB.'
+          );
+        }
       }
     } catch {
       Alert.alert(
@@ -135,8 +171,10 @@ export default function FridgeCaptureScreen() {
     }
   };
 
-  // 3. Avançar para análise provisória
+  // 3. Avançar para análise real
   const handleAnalyze = () => {
+    if (isNavigating) return;
+
     if (photoCount === 0) {
       Alert.alert(
         'Nenhuma foto capturada',
@@ -145,13 +183,15 @@ export default function FridgeCaptureScreen() {
       return;
     }
 
+    setIsNavigating(true);
     router.push('/fridge-analysis');
+    setTimeout(() => setIsNavigating(false), 1000);
   };
 
   const hasPhotos = photoCount > 0;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
       <StatusBar style="light" />
 
       <FridgeHeader hasPhotos={hasPhotos} onClearPhotos={clearPhotos} />
@@ -192,16 +232,16 @@ export default function FridgeCaptureScreen() {
           <TouchableOpacity
             style={[
               styles.ctaButton,
-              !hasPhotos && styles.ctaButtonDisabled,
+              (!hasPhotos || isNavigating) && styles.ctaButtonDisabled,
             ]}
             onPress={handleAnalyze}
-            disabled={!hasPhotos}
+            disabled={!hasPhotos || isNavigating}
             activeOpacity={0.8}
             accessibilityRole="button"
             accessibilityLabel="Analisar fotos da geladeira"
           >
-            <Text style={[styles.ctaSparkle, !hasPhotos && styles.ctaTextDisabled]}>✦</Text>
-            <Text style={[styles.ctaText, !hasPhotos && styles.ctaTextDisabled]}>
+            <Text style={[styles.ctaSparkle, (!hasPhotos || isNavigating) && styles.ctaTextDisabled]}>✦</Text>
+            <Text style={[styles.ctaText, (!hasPhotos || isNavigating) && styles.ctaTextDisabled]}>
               Analisar foto
             </Text>
           </TouchableOpacity>

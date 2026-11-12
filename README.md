@@ -53,5 +53,6 @@ npm run lint
 - `task01.md`: onboarding e autenticação — concluída.
 - `task02.md`: Home autenticada e navegação principal — concluída.
 - `task03.md`: captura de fotos da geladeira — concluída no código; teste físico pendente.
-- `task04.md`: receitas e preparo guiado com Chef Rattito — pendente.
+- `task04.md`: receitas e preparo guiado com Chef Rattito — concluída no código; ensaio integrado realizado.
+- `task05.md`: integrar o módulo existente de fotos da geladeira ao endpoint real — planejada.
 

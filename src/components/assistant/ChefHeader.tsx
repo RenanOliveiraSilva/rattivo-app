@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, spacing } from '@/theme/tokens';
 import { SessionStatus } from '@/api/types';
 
 interface ChefHeaderProps {
@@ -16,10 +16,6 @@ export function ChefHeader({ recipeName, status, isSyncing }: ChefHeaderProps) {
     <View style={styles.container}>
       <View style={styles.topRow}>
         <Text style={styles.title}>Chef Rattito</Text>
-
-        <View style={styles.badgeSimulated}>
-          <Text style={styles.badgeSimulatedText}>Respostas simuladas</Text>
-        </View>
       </View>
 
       <View style={styles.contextRow}>
@@ -59,19 +55,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.textPrimary,
   },
-  badgeSimulated: {
-    backgroundColor: '#1E231B',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: radius.badge,
-    borderWidth: 1,
-    borderColor: '#2F382A',
-  },
-  badgeSimulatedText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: colors.textSecondary,
-  },
   contextRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -99,3 +82,4 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
 });
+

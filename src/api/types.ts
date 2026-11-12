@@ -131,3 +131,28 @@ export interface ConfirmStepRequest {
   contextRevision: number;
   confirmed: boolean;
 }
+
+// ==========================================
+// Tipos de Análise da Geladeira (Task 05)
+// ==========================================
+
+export type IngredientConfidence = 'HIGH' | 'MEDIUM' | 'LOW';
+
+export interface DetectedFridgeIngredient {
+  name: string;
+  confidence: IngredientConfidence;
+}
+
+export interface FridgeRecipeRecommendation {
+  recipeId: string;
+  name: string;
+  matchedIngredients: string[];
+  missingIngredients: string[];
+  matchPercentage: number;
+}
+
+export interface FridgeAnalysisView {
+  ingredients: DetectedFridgeIngredient[];
+  recommendations: FridgeRecipeRecommendation[];
+  warnings: string[];
+}
